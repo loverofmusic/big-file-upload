@@ -8,14 +8,38 @@
   <body>
     <input type="file" id="file" />
     <script>
+
+      function request({
+        url,
+        method = 'POST',
+        data,
+        headers = {},
+        requestList //上传的文件列表
+      }){
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open(method, url)
+          Object.keys(headers).forEach(key=>{
+            xhr.setRequestHeader(key, headers[kkey])
+          })
+          xhr.send(data)
+          xhr.onload = e =>{
+            resolve({
+              data: e.target.response
+            })
+          }
+        });
+      }
+
       // 任何文件都是二进制，分割Blob，http请求可并发 n个切片并发上传 速度更快
-      document.getElementById("file").addEventListener("change", event => {
+      document.getElementById("file").addEventListener("change", async event => {
         const file = event.target.files[0]; //es6 文件对象
+        const file_name = file.name.split('.')[0];
         // console.log(file);
         // console.log(Object.prototype.toString.call(file));//[object File]
         // console.log(Object.prototype.toString.call(file.slice(0, 102400)))//[object Blob]
         let cur = 0,
-          size = 1024 * 1024; //1M
+          size = 0.5*1024 * 1024; //1M
         const fileChunkList = []; //blob 数组
         while (cur < file.size) {
           fileChunkList.push({
@@ -24,7 +48,20 @@
           });
           cur += size;
         }
-        console.log(fileChunkList);
+        // console.log(fileChunkList);
+        const requestList = fileChunkList.map(({file}, index)=>{
+          const formData  = new FormData();
+          formData.append("chunk", file);
+          formData.append("filename", `${file_name}-${index}`)
+          return {
+            formData
+          }
+        }).map(async ({formData})=>request({
+          url: 'http://localhost:3000',
+          data: formData
+        }))
+        await Promise.all(requestList);//并发。。
+        // console.log(requestList)
       });
     </script>
   </body>

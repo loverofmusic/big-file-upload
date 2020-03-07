@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <img src="" alt="" id="pic" width="400"/>
+    <input type="file" id="file" />
+    <script>
+      //es6 file对象 blob blob:// 协议在文件上传方面解决了什么问题？
+      // 传统es5时代文件只有上传到服务器之后，静态服务器提供一个远程地址给我们，才能看到我们上传的这一张图
+      document.getElementById("file").addEventListener("change", e => {
+        const file = e.target.files[0];
+        const URL = window.URL;
+        const objectURL = URL.createObjectURL(file);
+        console.log(objectURL);
+        const pic = document.getElementById("pic")
+        pic.src = objectURL;
+        pic.onload = function(){
+          URL.revokeObjectURL(objectURL)
+          console.log("为了获得最佳性能和内存使用状态")
+        }
+      });
+    </script>
+  </body>
+</html>
